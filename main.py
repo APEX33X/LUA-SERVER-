@@ -635,26 +635,39 @@ def run_bot():
     if not BOT_TOKEN:
         print("[APEX BOT] BOT_TOKEN not set — bot disabled.")
         return
+
     import asyncio
+
+    async def start_bot():
+        application = Application.builder().token(BOT_TOKEN).build()
+        for name, fn in [
+            ("start",     cmd_start),
+            ("ping",      cmd_ping),
+            ("genkey",    cmd_genkey),
+            ("status",    cmd_status),
+            ("info",      cmd_info),
+            ("revoke",    cmd_revoke),
+            ("freeze",    cmd_freeze),
+            ("resethwid", cmd_resethwid),
+            ("listkeys",  cmd_listkeys),
+        ]:
+            application.add_handler(CommandHandler(name, fn))
+
+        print("[APEX BOT] Polling started...")
+        # stop_signals=() — thread mein signal handler kaam nahi karta
+        async with application:
+            await application.start()
+            await application.updater.start_polling(drop_pending_updates=True)
+            # Flask band hone tak chalta rahe
+            while True:
+                await asyncio.sleep(3600)
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-
-    application = Application.builder().token(BOT_TOKEN).build()
-    for name, fn in [
-        ("start",     cmd_start),
-        ("ping",      cmd_ping),
-        ("genkey",    cmd_genkey),
-        ("status",    cmd_status),
-        ("info",      cmd_info),
-        ("revoke",    cmd_revoke),
-        ("freeze",    cmd_freeze),
-        ("resethwid", cmd_resethwid),
-        ("listkeys",  cmd_listkeys),
-    ]:
-        application.add_handler(CommandHandler(name, fn))
-
-    print("[APEX BOT] Polling started...")
-    loop.run_until_complete(application.run_polling())
+    try:
+        loop.run_until_complete(start_bot())
+    except Exception as e:
+        print(f"[APEX BOT] Error: {e}")
 
 # ─────────────────────────────────────────────
 # ENTRY POINT
