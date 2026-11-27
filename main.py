@@ -21,11 +21,15 @@ SERVER_URL = os.environ.get("SERVER_URL", "https://lua-server-apex.onrender.com"
 BUILD_SIG_KEY = os.environ.get("BUILD_SIG_KEY", "APXBLD_FFI_2024")
 EXPECTED_INTEGRITY = os.environ.get("EXPECTED_INTEGRITY", "6897")
 PORT = int(os.environ.get("PORT", "5000"))
-MASTER_HEX = os.environ.get("MASTER_HEX", "")
+
+# ✅ HARDCODED MASTER_HEX — env var ke bharose nahi
+MASTER_HEX = os.environ.get(
+    "MASTER_HEX",
+    "9f3a7c1e5b8d2460a1c9e7f3d5b8a2460c1e9f7a3d5b8c2460e1f9a7c3d5b8e246a1c9f7e3d5b8a2460c1e9f7a3d5b8c2460e1f9a7c3d5b8e246a"
+)
 
 if not MASTER_HEX or len(MASTER_HEX) != 128:
-    log.error("MASTER_HEX missing — generating temp (WILL BREAK ON RESTART)")
-    MASTER_HEX = os.urandom(64).hex()
+    log.error("MASTER_HEX invalid — check hardcoded value")
 MASTER = bytes.fromhex(MASTER_HEX)
 
 MAGIC2 = 0xDEAD
@@ -524,4 +528,5 @@ if __name__ == "__main__":
     threading.Thread(target=cleanup, daemon=True).start()
     threading.Thread(target=run_bot, daemon=True).start()
     log.info(f"[APEX] port {PORT} | DB {DB_PATH} | URL {SERVER_URL}")
+    log.info(f"[APEX] MASTER_HEX {'OK' if len(MASTER_HEX) == 128 else 'INVALID'}")
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
