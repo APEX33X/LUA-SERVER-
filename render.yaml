@@ -1,9 +1,8 @@
-# render.yaml
 services:
   - type: web
-    name: apex-license-server
+    name: lua-server-apex
     env: python
-    plan: free
+    plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     disk:
@@ -24,4 +23,8 @@ services:
       - key: EXPECTED_INTEGRITY
         value: "6897"
       - key: SERVER_URL
+        value: https://lua-server-apex.onrender.com
+      - key: MASTER_HEX
         sync: false
+      - key: SESSION_TTL
+        value: "120"
