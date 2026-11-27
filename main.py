@@ -22,15 +22,26 @@ BUILD_SIG_KEY = os.environ.get("BUILD_SIG_KEY", "APXBLD_FFI_2024")
 EXPECTED_INTEGRITY = os.environ.get("EXPECTED_INTEGRITY", "6897")
 PORT = int(os.environ.get("PORT", "5000"))
 
-# ✅ HARDCODED MASTER_HEX — env var ke bharose nahi
-MASTER_HEX = os.environ.get(
-    "MASTER_HEX",
-    "9f3a7c1e5b8d2460a1c9e7f3d5b8a2460c1e9f7a3d5b8c2460e1f9a7c3d5b8e246a1c9f7e3d5b8a2460c1e9f7a3d5b8c2460e1f9a7c3d5b8e246a"
+# ✅ HARDCODED MASTER_HEX — validated + fallback, never crash
+_DEFAULT_MASTER = (
+    "9f3a7c1e5b8d2460"
+    "a1c9e7f3d5b8a246"
+    "0c1e9f7a3d5b8c24"
+    "60e1f9a7c3d5b8e2"
+    "46a1c9f7e3d5b8a2"
+    "460c1e9f7a3d5b8c"
+    "2460e1f9a7c3d5b8"
+    "e246a1c9f7e3d5b8"
 )
 
-if not MASTER_HEX or len(MASTER_HEX) != 128:
-    log.error("MASTER_HEX invalid — check hardcoded value")
+MASTER_HEX = os.environ.get("MASTER_HEX", _DEFAULT_MASTER).strip().lower()
+
+if len(MASTER_HEX) != 128 or not all(c in "0123456789abcdef" for c in MASTER_HEX):
+    log.error(f"MASTER_HEX invalid (len={len(MASTER_HEX)}) — falling back to default")
+    MASTER_HEX = _DEFAULT_MASTER
+
 MASTER = bytes.fromhex(MASTER_HEX)
+log.info(f"[APEX] MASTER_HEX loaded: {len(MASTER_HEX)} chars OK")
 
 MAGIC2 = 0xDEAD
 
@@ -528,5 +539,4 @@ if __name__ == "__main__":
     threading.Thread(target=cleanup, daemon=True).start()
     threading.Thread(target=run_bot, daemon=True).start()
     log.info(f"[APEX] port {PORT} | DB {DB_PATH} | URL {SERVER_URL}")
-    log.info(f"[APEX] MASTER_HEX {'OK' if len(MASTER_HEX) == 128 else 'INVALID'}")
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
